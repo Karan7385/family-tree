@@ -22,8 +22,10 @@ app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 app.use(express.json()); 
 app.use(express.urlencoded({ extended: true }));
 app.use(cors({
-  origin: 'https://family-tree-seven-flax.vercel.app',
-  credentials: true
+  origin: "https://family-tree-seven-flax.vercel.app", 
+  credentials: true,
+  methods: ["GET", "POST", "PUT", "DELETE"],
+  allowedHeaders: ["Content-Type", "Authorization"]
 }));
 app.use(cookieParser());
 
