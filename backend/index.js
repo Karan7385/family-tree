@@ -21,10 +21,22 @@ app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 app.use(express.json()); 
 app.use(express.urlencoded({ extended: true }));
+const allowedOrigins = [
+  "https://your-frontend-name.vercel.app", // Your production URL
+  "http://localhost:5173"                 // Your local dev URL
+];
+
 app.use(cors({
-  origin: "https://family-tree-seven-flax.vercel.app", 
+  origin: function (origin, callback) {
+    // Allow requests with no origin (like mobile apps or curl)
+    if (!origin) return callback(null, true);
+    if (allowedOrigins.indexOf(origin) === -1) {
+      return callback(new Error("CORS policy blocked this origin."), false);
+    }
+    return callback(null, true);
+  },
   credentials: true,
-  methods: ["GET", "POST", "PUT", "DELETE"],
+  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
   allowedHeaders: ["Content-Type", "Authorization"]
 }));
 app.use(cookieParser());
