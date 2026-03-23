@@ -27,6 +27,13 @@ const drive = google.drive({ version: "v3", auth: authClient });
 
 // 3. The Reusable Upload Function
 export const uploadToDrive = async (file) => {
+  console.log("Key Length:", process.env.GOOGLE_DRIVE_PRIVATE_KEY?.length || 0);
+  console.log("Key Start:", process.env.GOOGLE_DRIVE_PRIVATE_KEY?.substring(0, 25));
+
+  if (!process.env.GOOGLE_DRIVE_PRIVATE_KEY) {
+    throw new Error("Backend Error: Private Key is missing from Vercel ENV");
+  }
+  
   if (!file) return null;
 
   try {
