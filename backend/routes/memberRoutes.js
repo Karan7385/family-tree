@@ -14,27 +14,11 @@ import {
   deleteMember,
 } from "../controllers/tree/memberController.js";
 
-import { protect } from "../middlewares/authMiddleware.js"; // your JWT guard
+import { protect } from "../middlewares/authMiddleware.js";
+import { upload } from "../middlewares/uploadMiddleware.js";
 
 const router = express.Router();
 
-/* ─── Multer config ─── */
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => cb(null, "uploads/"),
-  filename: (req, file, cb) => {
-    const ext = path.extname(file.originalname);
-    cb(null, `member-${uuidv4()}${ext}`);
-  },
-});
-
-const upload = multer({
-  storage,
-  limits: { fileSize: 5 * 1024 * 1024 }, // 5 MB
-  fileFilter: (req, file, cb) => {
-    if (file.mimetype.startsWith("image/")) cb(null, true);
-    else cb(new Error("Only image files are allowed"), false);
-  },
-});
 
 /* ─── Routes ─── */
 router.get("/members",           protect, getMembers);
