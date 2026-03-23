@@ -42,6 +42,12 @@ export default function Register() {
           style: { borderRadius: "15px", background: "#0f172a", color: "#fff" },
         });
 
+        Cookies.set('token', response.data.token, { 
+          expires: 30, 
+          secure: true, 
+          sameSite: 'none' 
+        });
+
         localStorage.setItem('family-tree-user', JSON.stringify(response.data.user));
         setTimeout(() => {
           window.location.href = "/";
