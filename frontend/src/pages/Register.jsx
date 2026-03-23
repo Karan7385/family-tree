@@ -43,9 +43,10 @@ export default function Register() {
         });
 
         Cookies.set('token', response.data.token, { 
-          expires: 30, 
-          secure: true, 
-          sameSite: 'none' 
+          expires: 30,      // 30 days
+          secure: true,    // Required for Vercel
+          sameSite: 'none', // Required for Cross-Domain
+          path: '/'         // Make sure it's available everywhere
         });
 
         localStorage.setItem('family-tree-user', JSON.stringify(response.data.user));
