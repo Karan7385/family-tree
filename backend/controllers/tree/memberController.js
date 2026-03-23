@@ -1,3 +1,4 @@
+import { uploadToDrive } from "../../middlewares/uploadMiddleware.js";
 import Member from "../../models/memberModel.js";
 import path from "path";
 import fs from "fs";
@@ -58,10 +59,10 @@ export const createMember = async (req, res) => {
     const spousesRaw  = parseJSON(req.body.spouses, []);
     const childrenRaw = parseJSON(req.body.children, []);
 
-    // Photo
-    const photoURL = req.file
-      ? req.file.path.replace(/\\/g, "/")
-      : undefined;
+    let driveFileId = null;
+    if (req.file) {
+      driveFileId = await uploadToDrive(req.file);
+    }
 
     // Create member
     const member = await Member.create({
@@ -72,7 +73,7 @@ export const createMember = async (req, res) => {
       isAlive: String(isAlive) === "false" ? false : true,
       placeOfBirth: placeOfBirth || undefined,
       bio: bio || undefined,
-      photoURL,
+      photoURL: driveFileId,
       father: father || undefined,
       mother: mother || undefined,
       createdBy,
@@ -239,6 +240,7 @@ export const updateMember = async (req, res) => {
     }
 
     /* ── Photo ── */
+    let driveFileId = null;
     let photoURL = existing.photoURL;
     if (req.file) {
       // Delete old photo if it's not the default
@@ -246,7 +248,8 @@ export const updateMember = async (req, res) => {
         const oldPath = path.resolve(existing.photoURL);
         if (fs.existsSync(oldPath)) fs.unlinkSync(oldPath);
       }
-      photoURL = req.file.path.replace(/\\/g, "/");
+      driveFileId = await uploadToDrive(req.file);
+      photoURL = driveFileId;
     }
 
     /* ── Save ── */
