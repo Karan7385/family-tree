@@ -224,7 +224,7 @@ function UserMenu({ user, logout }) {
             </Link>
           ))}
 
-          <div className="border-t border-slate-800 mt-1 pt-1 pb-1">
+          <div className="border-t border-slate-800 mt-1 pt-1 pb-1 hidden">
             <button
               onClick={() => {
                 setOpen(false);
