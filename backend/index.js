@@ -31,7 +31,8 @@ app.use(cors({
   origin: "https://family-tree-seven-flax.vercel.app", // NO trailing slash
   credentials: true,                                // REQUIRED
   methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-  allowedHeaders: ["Content-Type", "Authorization"]
+  allowedHeaders: ["Content-Type", "Authorization"],
+  path: "/",
 }));
 app.use(cookieParser());
 
