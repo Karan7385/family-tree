@@ -36,10 +36,17 @@ export default function Login() {
       );
 
       if (response.data.success) {
+        Cookies.set('token', response.data.token, { 
+          expires: 30, 
+          secure: true, 
+          sameSite: 'none' 
+        });
+        
         localStorage.setItem(
           "family-tree-user",
           JSON.stringify(response.data.user),
         );
+        
         setTimeout(() => {
           window.location.href = "/";
         }, 1500);
