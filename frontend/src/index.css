@@ -1,0 +1,91 @@
+@import "tailwindcss";
+@import url('https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Sora:wght@300;400;600;700&display=swap');
+
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(32px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@keyframes pulse-glow {
+  0%, 100% { text-shadow: 0 0 30px rgba(99,102,241,0.6), 0 0 60px rgba(99,102,241,0.3); }
+  50%       { text-shadow: 0 0 60px rgba(99,102,241,1),   0 0 120px rgba(99,102,241,0.5); }
+}
+.fade-up   { animation: fadeUp 0.9s cubic-bezier(0.22,1,0.36,1) both; }
+.fade-up-2 { animation: fadeUp 0.9s 0.15s cubic-bezier(0.22,1,0.36,1) both; }
+.fade-up-3 { animation: fadeUp 0.9s 0.30s cubic-bezier(0.22,1,0.36,1) both; }
+.fade-up-4 { animation: fadeUp 0.9s 0.45s cubic-bezier(0.22,1,0.36,1) both; }
+.glow-404  { animation: pulse-glow 3s ease-in-out infinite; }
+
+
+
+
+/* ── Fonts ── */
+
+/* ── Keyframes ── */
+@keyframes fadeIn    { from{opacity:0} to{opacity:1} }
+@keyframes fadeOut   { from{opacity:1} to{opacity:0} }
+@keyframes fadeUp    { from{opacity:0;transform:translateY(20px)} to{opacity:1;transform:translateY(0)} }
+@keyframes scaleIn   { from{opacity:0;transform:scale(0.85)} to{opacity:1;transform:scale(1)} }
+@keyframes float     { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-10px)} }
+@keyframes blink     { 0%,100%{opacity:1} 50%{opacity:0} }
+@keyframes scanline  { from{top:-100%} to{top:100%} }
+@keyframes glitch    { 0%,94%,100%{transform:translate(0)} 95%{transform:translate(-3px,1px)} 97%{transform:translate(3px,-1px)} }
+@keyframes coreGlow  {
+  0%,100%{box-shadow:0 0 20px 6px rgba(99,102,241,0.7),0 0 60px 12px rgba(99,102,241,0.3)}
+  50%    {box-shadow:0 0 36px 14px rgba(6,182,212,0.8),0 0 90px 24px rgba(6,182,212,0.3)}
+}
+@keyframes ringPulse { 0%,100%{opacity:0.25;transform:scale(1)} 50%{opacity:0.6;transform:scale(1.08)} }
+@keyframes orbit1    { from{transform:rotateZ(0deg) translateX(52px) rotateZ(0deg)} to{transform:rotateZ(360deg) translateX(52px) rotateZ(-360deg)} }
+@keyframes orbit2    { from{transform:rotateX(60deg) rotateZ(0deg) translateX(72px) rotateZ(0deg)} to{transform:rotateX(60deg) rotateZ(360deg) translateX(72px) rotateZ(-360deg)} }
+@keyframes orbit3    { from{transform:rotateX(-30deg) rotateY(60deg) rotateZ(0deg) translateX(90px) rotateZ(0deg)} to{transform:rotateX(-30deg) rotateY(60deg) rotateZ(360deg) translateX(90px) rotateZ(-360deg)} }
+@keyframes progress  { 0%{width:0%} 15%{width:18%} 35%{width:42%} 60%{width:67%} 80%{width:83%} 100%{width:100%} }
+@keyframes shimmer   { 0%{background-position:-400px 0} 100%{background-position:400px 0} }
+
+/* ── Utility Classes ── */
+.anim-float       { animation: float 3.5s ease-in-out infinite; }
+.anim-glitch      { animation: glitch 6s infinite; }
+.anim-core-glow   { animation: coreGlow 2.5s ease-in-out infinite; }
+.anim-fade-up-1   { animation: fadeUp 0.7s 0.3s cubic-bezier(0.22,1,0.36,1) both; }
+.anim-fade-up-2   { animation: fadeUp 0.7s 0.4s cubic-bezier(0.22,1,0.36,1) both; }
+.anim-fade-up-3   { animation: fadeUp 0.7s 0.55s cubic-bezier(0.22,1,0.36,1) both; }
+.anim-fade-up-4   { animation: fadeUp 0.7s 0.65s cubic-bezier(0.22,1,0.36,1) both; }
+.anim-scale-in    { animation: scaleIn 0.5s cubic-bezier(0.22,1,0.36,1) both; }
+
+/* Orbiting Dots */
+.orbit-wrapper { position:absolute; width:0; height:0; }
+.orbiter       { position:absolute; border-radius:50%; transform-origin:0 0; }
+.orbiter-1     { width:9px;height:9px;background:#6366f1;margin:-4.5px 0 0 -4.5px;animation:orbit1 2.2s linear infinite;box-shadow:0 0 10px 3px rgba(99,102,241,0.7); }
+.orbiter-2     { width:7px;height:7px;background:#06b6d4;margin:-3.5px 0 0 -3.5px;animation:orbit2 3.1s linear infinite;box-shadow:0 0 8px 3px rgba(6,182,212,0.7); }
+.orbiter-3     { width:6px;height:6px;background:#f472b6;margin:-3px 0 0 -3px;  animation:orbit3 4.0s linear infinite;box-shadow:0 0 8px 2px rgba(244,114,182,0.7); }
+
+/* Pulse Rings */
+.ring { position:absolute;border-radius:50%;border:1px solid;transform:translate(-50%,-50%);animation:ringPulse 2.4s ease-in-out infinite; }
+
+/* Status Dots */
+.status-dot { width:6px;height:6px;border-radius:50%;display:inline-block; }
+.dot-done   { background:#22c55e;box-shadow:0 0 6px rgba(34,197,94,0.7); }
+.dot-active { background:#6366f1;box-shadow:0 0 8px rgba(99,102,241,0.9);animation:blink 1s step-start infinite; }
+.dot-wait   { background:#334155; }
+
+/* Progress Bar */
+.progress-fill {
+  height:100%;border-radius:99px;
+  background:linear-gradient(90deg,#4f46e5,#6366f1,#06b6d4,#6366f1,#4f46e5);
+  background-size:400px 100%;
+  animation:progress 4.2s cubic-bezier(0.4,0,0.2,1) forwards, shimmer 1.8s linear infinite;
+}
+
+/* Grid & Vignette Backgrounds */
+.grid-bg { position:fixed;inset:0;z-index:0;background-image:linear-gradient(rgba(99,102,241,0.04) 1px,transparent 1px),linear-gradient(90deg,rgba(99,102,241,0.04) 1px,transparent 1px);background-size:52px 52px; }
+.radial-vignette { position:fixed;inset:0;z-index:0;background:radial-gradient(ellipse 80% 80% at 50% 50%,transparent 30%,rgba(2,6,23,0.9) 100%); }
+
+/* Scanline */
+.scanline-overlay { background:linear-gradient(transparent 50%,rgba(2,6,23,0.025) 50%);background-size:100% 4px; }
+.scanline { position:absolute;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,rgba(99,102,241,0.6),transparent);animation:scanline 2.5s linear infinite; }
+
+/* Corner Marks */
+.corner-mark { position:fixed;width:40px;height:40px;opacity:0.3; }
+.corner-mark::before,.corner-mark::after { content:'';position:absolute;background:rgba(99,102,241,0.6); }
+.cm-tl{top:0;left:0}.cm-tl::before{top:0;left:0;width:100%;height:1px}.cm-tl::after{top:0;left:0;width:1px;height:100%}
+.cm-tr{top:0;right:0}.cm-tr::before{top:0;right:0;width:100%;height:1px}.cm-tr::after{top:0;right:0;width:1px;height:100%}
+.cm-bl{bottom:0;left:0}.cm-bl::before{bottom:0;left:0;width:100%;height:1px}.cm-bl::after{bottom:0;left:0;width:1px;height:100%}
+.cm-br{bottom:0;right:0}.cm-br::before{bottom:0;right:0;width:100%;height:1px}.cm-br::after{bottom:0;right:0;width:1px;height:100%}
