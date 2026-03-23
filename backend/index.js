@@ -27,15 +27,8 @@ const allowedOrigins = [
 ];
 
 app.use(cors({
-  origin: function (origin, callback) {
-    // Allow requests with no origin (like mobile apps or curl)
-    if (!origin) return callback(null, true);
-    if (allowedOrigins.indexOf(origin) === -1) {
-      return callback(new Error("CORS policy blocked this origin."), false);
-    }
-    return callback(null, true);
-  },
-  credentials: true,
+  origin: "https://family-tree-seven-flax.vercel.app", // NO trailing slash
+  credentials: true,                                // REQUIRED
   methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
   allowedHeaders: ["Content-Type", "Authorization"]
 }));
