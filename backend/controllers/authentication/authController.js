@@ -43,17 +43,11 @@ const register = async (req, res) => {
       expiresIn: "30d",
     });
 
-    res.cookie("token", token, {
-      httpOnly: true,
-      secure: true,
-      sameSite: "none",
-      maxAge: 30 * 24 * 60 * 60 * 1000,
-    });
-
     return res.status(201).json({
       success: true,
       message: "Registered Successfully",
       user: { id: newUser._id, name: newUser.name, email: newUser.email },
+      token: token
     });
   } catch (error) {
     return res.status(500).json({
@@ -99,17 +93,11 @@ const login = async (req, res) => {
       expiresIn: "30d",
     });
 
-    res.cookie("token", token, {
-      httpOnly: true,
-      secure: true,
-      sameSite: "none",
-      maxAge: 30 * 24 * 60 * 60 * 1000,
-    });
-
     return res.status(200).json({
       success: true,
       message: "Login Successful!",
-      user: { id: user._id, name: user.name, email: user.email }
+      user: { id: user._id, name: user.name, email: user.email },
+      token: token
     });
   } catch (error) {
     return res.status(500).json({ success: false, message: error.message });
