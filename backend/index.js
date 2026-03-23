@@ -22,7 +22,7 @@ app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 app.use(express.json()); 
 app.use(express.urlencoded({ extended: true }));
 const allowedOrigins = [
-  "family-tree-seven-flax.vercel.app", // Your production URL
+  "https://family-tree-seven-flax.vercel.app", // Your production URL
   "http://localhost:5173"                 // Your local dev URL
 ];
 
