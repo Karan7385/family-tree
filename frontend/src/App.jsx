@@ -19,6 +19,7 @@ function App() {
   const [loading, setLoading] = useState(true);
 
   const isAuthenticated = !!Cookies.get("token");
+  console.log(Cookies.get("token"));
   
   const user = (() => {
     try {
