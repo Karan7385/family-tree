@@ -16,23 +16,25 @@ export const upload = multer({
 // 2. Google Drive Setup
 const SCOPES = ["https://www.googleapis.com/auth/drive.file"];
 
-const auth = new google.auth.JWT(
+const authClient = new google.auth.JWT(
   process.env.GOOGLE_DRIVE_CLIENT_EMAIL,
   null,
   process.env.GOOGLE_DRIVE_PRIVATE_KEY?.replace(/\\n/g, "\n"),
-  SCOPES
+  SCOPES,
 );
 
-const drive = google.drive({ version: "v3", auth });
+const drive = google.drive({ version: "v3", auth: authClient });
 
 // 3. The Reusable Upload Function
 export const uploadToDrive = async (file) => {
   if (!file) return null;
 
-  const bufferStream = new stream.PassThrough();
-  bufferStream.end(file.buffer);
-
   try {
+    await authClient.authorize();
+
+    const bufferStream = new stream.PassThrough();
+    bufferStream.end(file.buffer);
+
     const response = await drive.files.create({
       requestBody: {
         name: `family-member-${Date.now()}-${file.originalname}`,
@@ -45,8 +47,6 @@ export const uploadToDrive = async (file) => {
       fields: "id",
     });
 
-    // We also need to make the file readable by anyone with the link
-    // so it shows up in your React Tree
     await drive.permissions.create({
       fileId: response.data.id,
       requestBody: {
