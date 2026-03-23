@@ -261,17 +261,19 @@ export default function Navbar({
   const location = useLocation();
 
   const logout = async () => {
+    localStorage.removeItem("family-tree-user");
+    Cookies.remove("token", { path: "/", secure: true, sameSite: "none" });
+  
+    document.cookie = "token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/; SameSite=None; Secure";
+  
     try {
-      Cookies.remove("token", { path: "/", secure: true, sameSite: "none" });
-
-      localStorage.removeItem("family-tree-user");
-
-      window.location.href = "/login";
-    } catch (error) {
-      console.error("Logout failed:", error);
-      localStorage.removeItem("family-tree-user");
-      window.location.href = "/login";
+      await axios.post(`${BASE_URL}/api/auth/logout`);
+    } catch (err) {
+      console.log("Backend cleanup failed, but local data is gone.");
     }
+  
+    // 5. Final redirect
+    window.location.href = "/login";
   };
 
   useEffect(() => {
