@@ -262,7 +262,7 @@ export default function Navbar({
 
   const logout = async () => {
     try {
-      Cookies.remove('token');
+      Cookies.remove("token", { path: "/", secure: true, sameSite: "none" });
 
       localStorage.removeItem("family-tree-user");
 
