@@ -156,9 +156,11 @@ const forgotPassword = async (req, res) => {
 const logout = async (req, res) => {
   try {
     res.cookie("token", "", {
+      httpOnly: false,
       expires: new Date(0),
-      secure: process.env.NODE_ENV === "production",
-      sameSite: "strict",
+      secure: true,
+      sameSite: "none",
+      path: "/",
     });
 
     return res.status(200).json({
