@@ -45,6 +45,7 @@ export default function Login() {
         }, 1500);
       }
     } catch (err) {
+      console.log(err);
       setError(err.response?.data?.message || "Invalid email or password");
     } finally {
       setLoading(false);
