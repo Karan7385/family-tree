@@ -262,11 +262,7 @@ export default function Navbar({
 
   const logout = async () => {
     try {
-      await axios.post(
-        `${BASE_URL}/api/auth/logout`,
-        {},
-        { withCredentials: true },
-      );
+      Cookies.remove('token');
 
       localStorage.removeItem("family-tree-user");
 
