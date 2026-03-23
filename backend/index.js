@@ -17,7 +17,6 @@ app.set("trust proxy", 1);
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
-console.log(__dirname);
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 app.use(express.json()); 
@@ -34,6 +33,23 @@ app.use(cors({
   allowedHeaders: ["Content-Type", "Authorization"],
   path: "/",
 }));
+
+app.use((req, res, next) => {
+  const origin = req.headers.origin;
+  if (origin === "https://family-tree-seven-flax.vercel.app") {
+    res.setHeader("Access-Control-Allow-Origin", origin);
+  }
+  res.setHeader("Access-Control-Allow-Credentials", "true");
+  res.setHeader("Access-Control-Allow-Methods", "GET,POST,PUT,DELETE,OPTIONS");
+  res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");
+  
+  // Handle Preflight
+  if (req.method === "OPTIONS") {
+    return res.sendStatus(204);
+  }
+  next();
+});
+
 app.use(cookieParser());
 
 const PORT = process.env.PORT;
