@@ -99,8 +99,6 @@ const login = async (req, res) => {
       expiresIn: "30d",
     });
 
-    console.log("token", token);
-
     res.cookie("token", token, {
       httpOnly: true,
       secure: true,
