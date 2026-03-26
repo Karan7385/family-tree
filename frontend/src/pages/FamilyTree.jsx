@@ -166,7 +166,7 @@ const FamilyNode = ({ data, selected }) => {
           <img
             src={
               data.photoURL && data.photoURL !== "default.jpg"
-                ? `${BASE_URL}/${data.photoURL}`
+                ? `${data.photoURL}`
                 : `https://ui-avatars.com/api/?name=${data.firstName}+${data.lastName}&background=1e293b&color=${genderColor.slice(1)}&bold=true&size=64`
             }
             alt=""
@@ -285,7 +285,7 @@ const MemberDetailDrawer = ({
               <img
                 src={
                   member.photoURL && member.photoURL !== "default.jpg"
-                    ? `${BASE_URL}/${member.photoURL}`
+                    ? `${member.photoURL}`
                     : `https://ui-avatars.com/api/?name=${member.firstName}+${member.lastName}&background=1e293b&color=${genderColor.slice(1)}&bold=true&size=128`
                 }
                 alt=""
