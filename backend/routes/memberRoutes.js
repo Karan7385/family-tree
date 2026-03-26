@@ -18,10 +18,10 @@ const router = express.Router();
 
 
 /* ─── Routes ─── */
-router.get("/members",           protect, getMembers);
-router.post("/members",          protect, upload.single("photo"), createMember);
-router.get("/members/:id",       protect, getMember);
-router.put("/members/:id",       protect, upload.single("photo"), updateMember);
-router.delete("/members/:id",    protect, deleteMember);
+router.get("/members",           getMembers);
+router.post("/members",          upload.single("photo"), createMember);
+router.get("/members/:id",       getMember);
+router.put("/members/:id",       upload.single("photo"), updateMember);
+router.delete("/members/:id",    deleteMember);
 
 export default router;
