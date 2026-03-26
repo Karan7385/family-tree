@@ -167,7 +167,7 @@ export default function MemberModal({
           toOpt(typeof c === "object" ? c : { _id: c, firstName: c })
         ),
       });
-      setPreview(initialData.photoURL ? `${BASE_URL}/${initialData.photoURL}` : null);
+      setPreview(initialData.photoURL ? `${initialData.photoURL}` : null);
     } else {
       setFormData(emptyForm);
       setPreview(null);
