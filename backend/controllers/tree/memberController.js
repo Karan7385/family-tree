@@ -255,7 +255,7 @@ export const createMember = async (req, res) => {
 ═══════════════════════════════ */
 
 export const getMembers = async (req, res) => {
-  console.log(req.user.id);
+  console.log(req.user);
   try {
     const members = await Member.find({
       createdBy: req.user.id,
