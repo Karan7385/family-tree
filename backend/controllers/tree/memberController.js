@@ -349,12 +349,16 @@ export const updateMember = async (req, res) => {
     }
 
     /* UPDATE */
-
+    const spouses = parseJSON(req.body.spouses, []);
+    const children = parseJSON(req.body.children, []);
+    
     const updated = await Member.findByIdAndUpdate(
       id,
 
       {
         ...req.body,
+        spouses,
+        children,
 
         photoURL,
 
