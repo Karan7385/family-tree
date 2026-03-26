@@ -28,12 +28,14 @@ const allowedOrigins = [
 ];
 
 app.use(cors({
-  origin: "https://family-tree-seven-flax.vercel.app", // NO trailing slash
-  credentials: true,                                // REQUIRED
-  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-  allowedHeaders: ["Content-Type", "Authorization"],
-  path: "/",
+  origin: [
+    "http://localhost:5173",
+    "https://family-tree-seven-flax.vercel.app"
+  ],
+  credentials:true
 }));
+
+app.use(express.json());
 
 app.use(cookieParser());
 
