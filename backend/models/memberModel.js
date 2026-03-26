@@ -98,12 +98,12 @@ memberSchema.pre("save", function () {
   }
 });
 
-memberSchema.pre("findOneAndUpdate", function () {
-  const update = this.getUpdate();
+// memberSchema.pre("findOneAndUpdate", function () {
+//   const update = this.getUpdate();
 
-  if (update?.dod || update?.deathCause) {
-    update.isAlive = false;
-  }
-});
+//   if (update?.dod || update?.deathCause) {
+//     update.isAlive = false;
+//   }
+// });
 
 export default mongoose.model("Member", memberSchema);
