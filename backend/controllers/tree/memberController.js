@@ -2,7 +2,7 @@ import Member from "../../models/memberModel.js";
 import {
   uploadToCloudinary,
   deleteFromCloudinary,
-} from "../../services/cloudinaryFileService.js";
+} from "../../cloudinaryFileService.js";
 
 /* ───────────────────────────── */
 
