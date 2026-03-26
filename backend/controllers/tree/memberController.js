@@ -1,104 +1,232 @@
-import { uploadToDrive } from "../../middlewares/uploadMiddleware.js";
 import Member from "../../models/memberModel.js";
-import path from "path";
-import fs from "fs";
+import {
+  uploadToCloudinary,
+  deleteFromCloudinary,
+} from "../../services/cloudinaryFileService.js";
+
+/* ───────────────────────────── */
 
 const parseJSON = (value, fallback = []) => {
   if (!value) return fallback;
+
   if (typeof value === "object") return value;
-  try { return JSON.parse(value); } catch { return fallback; }
+
+  try {
+    return JSON.parse(value);
+  } catch {
+    return fallback;
+  }
 };
 
-/** Bidirectional: add child to parent's children array */
+/* ───────────────────────────── */
+
 async function linkChildToParent(parentId, childId) {
   if (!parentId || !childId) return;
-  await Member.findByIdAndUpdate(parentId, {
-    $addToSet: { children: childId },
-  });
+
+  await Member.findByIdAndUpdate(
+    parentId,
+
+    {
+      $addToSet: {
+        children: childId,
+      },
+    },
+  );
 }
 
-/** Bidirectional: remove child from parent's children array */
+/* ───────────────────────────── */
+
 async function unlinkChildFromParent(parentId, childId) {
   if (!parentId || !childId) return;
-  await Member.findByIdAndUpdate(parentId, {
-    $pull: { children: childId },
-  });
+
+  await Member.findByIdAndUpdate(
+    parentId,
+
+    {
+      $pull: {
+        children: childId,
+      },
+    },
+  );
 }
 
-/** Bidirectional: add spouse link on both members */
+/* ───────────────────────────── */
+
 async function linkSpouse(memberId, spouseId, status) {
-  await Member.findByIdAndUpdate(memberId, {
-    $addToSet: { spouses: { spouse: spouseId, status } },
-  });
-  await Member.findByIdAndUpdate(spouseId, {
-    $addToSet: { spouses: { spouse: memberId, status } },
-  });
+  await Member.findByIdAndUpdate(
+    memberId,
+
+    {
+      $addToSet: {
+        spouses: {
+          spouse: spouseId,
+          status,
+        },
+      },
+    },
+  );
+
+  await Member.findByIdAndUpdate(
+    spouseId,
+
+    {
+      $addToSet: {
+        spouses: {
+          spouse: memberId,
+          status,
+        },
+      },
+    },
+  );
 }
 
-/** Bidirectional: remove spouse link from both members */
+/* ───────────────────────────── */
+
 async function unlinkSpouse(memberId, spouseId) {
-  await Member.findByIdAndUpdate(memberId, {
-    $pull: { spouses: { spouse: spouseId } },
-  });
-  await Member.findByIdAndUpdate(spouseId, {
-    $pull: { spouses: { spouse: memberId } },
-  });
+  await Member.findByIdAndUpdate(
+    memberId,
+
+    {
+      $pull: {
+        spouses: {
+          spouse: spouseId,
+        },
+      },
+    },
+  );
+
+  await Member.findByIdAndUpdate(
+    spouseId,
+
+    {
+      $pull: {
+        spouses: {
+          spouse: memberId,
+        },
+      },
+    },
+  );
 }
 
-/* ═══════════════════════════════════════
+/* ═══════════════════════════════
    CREATE MEMBER
-═══════════════════════════════════════ */
+═══════════════════════════════ */
+
 export const createMember = async (req, res) => {
   try {
     const {
-      firstName, lastName, gender, dob, dod, deathCause,
-      isAlive, placeOfBirth, bio, createdBy,
-      father, mother,
+      firstName,
+      lastName,
+      gender,
+      dob,
+      dod,
+      deathCause,
+      isAlive,
+      placeOfBirth,
+      bio,
+      createdBy,
+      father,
+      mother,
     } = req.body;
 
-    const spousesRaw  = parseJSON(req.body.spouses, []);
-    const childrenRaw = parseJSON(req.body.children, []);
+    const spousesRaw = parseJSON(req.body.spouses);
 
-    let driveFileId = null;
+    const childrenRaw = parseJSON(req.body.children);
+
+    /* PHOTO */
+
+    let photoURL = null;
+
+    let photoId = null;
+
     if (req.file) {
-      driveFileId = await uploadToDrive(req.file);
+      const result = await uploadToCloudinary(req.file);
+
+      photoURL = result.url;
+      photoId = result.public_id;
     }
 
-    // Create member
+    /* CREATE */
+
     const member = await Member.create({
-      firstName, lastName, gender,
-      dob: dob || undefined,
-      dod: dod || undefined,
-      deathCause: deathCause || undefined,
+      firstName,
+
+      lastName,
+
+      gender,
+
+      dob: dob || null,
+
+      dod: dod || null,
+
+      deathCause: deathCause || null,
+
       isAlive: String(isAlive) === "false" ? false : true,
-      placeOfBirth: placeOfBirth || undefined,
-      bio: bio || undefined,
-      photoURL: driveFileId,
-      father: father || undefined,
-      mother: mother || undefined,
+
+      placeOfBirth: placeOfBirth || "",
+
+      bio: bio || "",
+
+      photoURL,
+
+      photoId,
+
+      father: father || null,
+
+      mother: mother || null,
+
       createdBy,
     });
 
     const memberId = member._id;
 
-    // Sync: father / mother
+    /* RELATIONS */
+
     if (father) await linkChildToParent(father, memberId);
+
     if (mother) await linkChildToParent(mother, memberId);
 
-    // Sync: spouses
-    for (const sp of spousesRaw) {
-      await linkSpouse(memberId, sp.spouse, sp.status || "married");
-    }
-    // Store spouses on this member too
-    member.spouses = spousesRaw.map((s) => ({ spouse: s.spouse, status: s.status || "married" }));
+    /* SPOUSES */
 
-    // Sync: children (set father/mother on each child)
+    for (const sp of spousesRaw) {
+      await linkSpouse(
+        memberId,
+
+        sp.spouse,
+
+        sp.status || "married",
+      );
+    }
+
+    member.spouses = spousesRaw.map((s) => ({
+      spouse: s.spouse,
+
+      status: s.status || "married",
+    }));
+
+    /* CHILDREN */
+
     for (const childId of childrenRaw) {
       if (gender === "male") {
-        await Member.findByIdAndUpdate(childId, { father: memberId });
-      } else if (gender === "female") {
-        await Member.findByIdAndUpdate(childId, { mother: memberId });
+        await Member.findByIdAndUpdate(
+          childId,
+
+          {
+            father: memberId,
+          },
+        );
       }
+
+      if (gender === "female") {
+        await Member.findByIdAndUpdate(
+          childId,
+
+          {
+            mother: memberId,
+          },
+        );
+      }
+
       member.children.addToSet(childId);
     }
 
@@ -106,229 +234,223 @@ export const createMember = async (req, res) => {
 
     return res.status(201).json({
       success: true,
+
       message: "Member created",
+
       data: member,
     });
   } catch (err) {
-    console.error("createMember error:", err);
-    if (err.name === "ValidationError") {
-      return res.status(400).json({
-        success: false,
-        message: "Validation failed",
-        errors: Object.values(err.errors).map((e) => e.message),
-      });
-    }
-    return res.status(500).json({ success: false, message: "Server error" });
+    console.error(err);
+
+    return res.status(500).json({
+      success: false,
+
+      message: "Server error",
+    });
   }
 };
 
-/* ═══════════════════════════════════════
-   GET ALL MEMBERS (for a user/tree)
-═══════════════════════════════════════ */
+/* ═══════════════════════════════
+   GET MEMBERS
+═══════════════════════════════ */
+
 export const getMembers = async (req, res) => {
   try {
-    const members = await Member.find({ createdBy: req.user.id })
+    const members = await Member.find({
+      createdBy: req.user.id,
+    })
+
       .populate("father", "firstName lastName gender photoURL")
+
       .populate("mother", "firstName lastName gender photoURL")
+
       .populate("spouses.spouse", "firstName lastName gender photoURL")
+
       .populate("children", "firstName lastName gender photoURL")
+
       .sort({ createdAt: 1 });
 
-    return res.status(200).json({ success: true, data: members });
+    res.json({
+      success: true,
+
+      data: members,
+    });
   } catch (err) {
-    console.error("getMembers error:", err);
-    return res.status(500).json({ success: false, message: "Server error" });
+    res.status(500).json({
+      success: false,
+    });
   }
 };
 
-/* ═══════════════════════════════════════
-   GET SINGLE MEMBER
-═══════════════════════════════════════ */
+/* ═══════════════════════════════
+   GET MEMBER
+═══════════════════════════════ */
+
 export const getMember = async (req, res) => {
   try {
     const member = await Member.findById(req.params.id)
-      .populate("father", "firstName lastName gender photoURL dob")
-      .populate("mother", "firstName lastName gender photoURL dob")
-      .populate("spouses.spouse", "firstName lastName gender photoURL dob")
-      .populate("children", "firstName lastName gender photoURL dob");
 
-    if (!member) return res.status(404).json({ success: false, message: "Member not found" });
+      .populate("father", "firstName lastName gender photoURL")
 
-    return res.status(200).json({ success: true, data: member });
-  } catch (err) {
-    return res.status(500).json({ success: false, message: "Server error" });
+      .populate("mother", "firstName lastName gender photoURL")
+
+      .populate("spouses.spouse", "firstName lastName gender photoURL")
+
+      .populate("children", "firstName lastName gender photoURL");
+
+    if (!member)
+      return res.status(404).json({
+        success: false,
+
+        message: "Member not found",
+      });
+
+    res.json({
+      success: true,
+
+      data: member,
+    });
+  } catch {
+    res.status(500).json({
+      success: false,
+    });
   }
 };
 
-/* ═══════════════════════════════════════
-   UPDATE MEMBER (with relation diff)
-═══════════════════════════════════════ */
+/* ═══════════════════════════════
+   UPDATE MEMBER
+═══════════════════════════════ */
+
 export const updateMember = async (req, res) => {
   try {
     const { id } = req.params;
+
     const existing = await Member.findById(id);
-    if (!existing) return res.status(404).json({ success: false, message: "Member not found" });
 
-    const {
-      firstName, lastName, gender, dob, dod, deathCause,
-      isAlive, placeOfBirth, bio,
-      father, mother,
-    } = req.body;
+    if (!existing)
+      return res.status(404).json({
+        success: false,
+      });
 
-    const newSpouses  = parseJSON(req.body.spouses, []);
-    const newChildren = parseJSON(req.body.children, []);
+    /* PHOTO */
 
-    /* ── Father ── */
-    const oldFatherId = existing.father?.toString();
-    const newFatherId = father || null;
-    if (oldFatherId !== newFatherId) {
-      if (oldFatherId) await unlinkChildFromParent(oldFatherId, id);
-      if (newFatherId) await linkChildToParent(newFatherId, id);
-    }
-
-    /* ── Mother ── */
-    const oldMotherId = existing.mother?.toString();
-    const newMotherId = mother || null;
-    if (oldMotherId !== newMotherId) {
-      if (oldMotherId) await unlinkChildFromParent(oldMotherId, id);
-      if (newMotherId) await linkChildToParent(newMotherId, id);
-    }
-
-    /* ── Spouses ── */
-    const oldSpouseIds = (existing.spouses || []).map((s) => s.spouse?.toString());
-    const newSpouseIds = newSpouses.map((s) => s.spouse?.toString() || s.spouse);
-
-    // Remove old spouses not in new list
-    for (const oldId of oldSpouseIds) {
-      if (!newSpouseIds.includes(oldId)) await unlinkSpouse(id, oldId);
-    }
-    // Add new spouses not in old list
-    for (const sp of newSpouses) {
-      const spId = sp.spouse?.toString() || sp.spouse;
-      if (!oldSpouseIds.includes(spId)) {
-        await linkSpouse(id, spId, sp.status || "married");
-      } else {
-        // Update status if changed
-        await Member.updateOne(
-          { _id: id, "spouses.spouse": spId },
-          { $set: { "spouses.$.status": sp.status || "married" } }
-        );
-        await Member.updateOne(
-          { _id: spId, "spouses.spouse": id },
-          { $set: { "spouses.$.status": sp.status || "married" } }
-        );
-      }
-    }
-
-    /* ── Children ── */
-    const oldChildIds = (existing.children || []).map((c) => c?.toString());
-    const newChildIdsStr = newChildren.map((c) => c?.toString() || c);
-
-    // Remove removed children
-    for (const oldCId of oldChildIds) {
-      if (!newChildIdsStr.includes(oldCId)) {
-        const childGenderField = gender === "male" ? "father" : "mother";
-        await Member.findByIdAndUpdate(oldCId, { [childGenderField]: null });
-      }
-    }
-    // Add new children
-    for (const cId of newChildIdsStr) {
-      if (!oldChildIds.includes(cId)) {
-        const childGenderField = gender === "male" ? "father" : "mother";
-        await Member.findByIdAndUpdate(cId, { [childGenderField]: id });
-      }
-    }
-
-    /* ── Photo ── */
-    let driveFileId = null;
     let photoURL = existing.photoURL;
+
+    let photoId = existing.photoId;
+
     if (req.file) {
-      // Delete old photo if it's not the default
-      if (existing.photoURL && !existing.photoURL.includes("default.jpg")) {
-        const oldPath = path.resolve(existing.photoURL);
-        if (fs.existsSync(oldPath)) fs.unlinkSync(oldPath);
+      if (photoId) {
+        await deleteFromCloudinary(photoId);
       }
-      driveFileId = await uploadToDrive(req.file);
-      photoURL = driveFileId;
+
+      const result = await uploadToCloudinary(req.file);
+
+      photoURL = result.url;
+
+      photoId = result.fileId;
     }
 
-    /* ── Save ── */
+    /* UPDATE */
+
     const updated = await Member.findByIdAndUpdate(
       id,
-      {
-        firstName, lastName, gender,
-        dob: dob || null,
-        dod: dod || null,
-        deathCause: deathCause || null,
-        isAlive: String(isAlive) === "false" ? false : true,
-        placeOfBirth: placeOfBirth || "",
-        bio: bio || "",
-        photoURL,
-        father: newFatherId,
-        mother: newMotherId,
-        spouses: newSpouses.map((s) => ({
-          spouse: s.spouse,
-          status: s.status || "married",
-        })),
-        children: newChildIdsStr,
-      },
-      { new: true, runValidators: true }
-    )
-      .populate("father", "firstName lastName gender photoURL")
-      .populate("mother", "firstName lastName gender photoURL")
-      .populate("spouses.spouse", "firstName lastName gender photoURL")
-      .populate("children", "firstName lastName gender photoURL");
 
-    return res.status(200).json({ success: true, message: "Member updated", data: updated });
+      {
+        ...req.body,
+
+        photoURL,
+
+        photoId,
+      },
+
+      {
+        new: true,
+
+        runValidators: true,
+      },
+    )
+
+      .populate("father", "firstName lastName")
+
+      .populate("mother", "firstName lastName")
+
+      .populate("spouses.spouse", "firstName lastName")
+
+      .populate("children", "firstName lastName");
+
+    res.json({
+      success: true,
+
+      message: "Member updated",
+
+      data: updated,
+    });
   } catch (err) {
-    console.error("updateMember error:", err);
-    if (err.name === "ValidationError") {
-      return res.status(400).json({
-        success: false,
-        message: "Validation failed",
-        errors: Object.values(err.errors).map((e) => e.message),
-      });
-    }
-    return res.status(500).json({ success: false, message: "Server error" });
+    console.error(err);
+
+    res.status(500).json({
+      success: false,
+    });
   }
 };
 
-/* ═══════════════════════════════════════
-   DELETE MEMBER (clean all relations)
-═══════════════════════════════════════ */
+/* ═══════════════════════════════
+   DELETE MEMBER
+═══════════════════════════════ */
+
 export const deleteMember = async (req, res) => {
   try {
     const { id } = req.params;
+
     const member = await Member.findById(id);
-    if (!member) return res.status(404).json({ success: false, message: "Member not found" });
 
-    // Remove from others' children lists
-    if (member.father) await unlinkChildFromParent(member.father, id);
-    if (member.mother) await unlinkChildFromParent(member.mother, id);
+    if (!member)
+      return res.status(404).json({
+        success: false,
+      });
 
-    // Remove spouse links
-    for (const sp of member.spouses || []) {
-      await unlinkSpouse(id, sp.spouse);
+    /* DELETE PHOTO */
+
+    if (member.photoId) {
+      await deleteFromCloudinary(member.photoId);
     }
 
-    // Orphan children (remove this member as father/mother)
-    const field = member.gender === "male" ? "father" : "mother";
-    await Member.updateMany(
-      { [field]: id },
-      { $unset: { [field]: "" } }
-    );
+    /* CLEAN RELATIONS */
 
-    // Delete photo file
-    if (member.photoURL && !member.photoURL.includes("default.jpg")) {
-      const filePath = path.resolve(member.photoURL);
-      if (fs.existsSync(filePath)) fs.unlinkSync(filePath);
+    if (member.father)
+      await unlinkChildFromParent(
+        member.father,
+
+        id,
+      );
+
+    if (member.mother)
+      await unlinkChildFromParent(
+        member.mother,
+
+        id,
+      );
+
+    for (const sp of member.spouses) {
+      await unlinkSpouse(
+        id,
+
+        sp.spouse,
+      );
     }
 
     await Member.findByIdAndDelete(id);
 
-    return res.status(200).json({ success: true, message: "Member deleted" });
+    res.json({
+      success: true,
+
+      message: "Member deleted",
+    });
   } catch (err) {
-    console.error("deleteMember error:", err);
-    return res.status(500).json({ success: false, message: "Server error" });
+    console.error(err);
+
+    res.status(500).json({
+      success: false,
+    });
   }
 };
