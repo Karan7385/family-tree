@@ -2,9 +2,6 @@
 // Mount at: app.use('/api/tree', memberRoutes)
 
 import express from "express";
-import multer from "multer";
-import path from "path";
-import { v4 as uuidv4 } from "uuid";
 
 import {
   createMember,
